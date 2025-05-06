@@ -36,7 +36,7 @@ const db = {
 };
 
 // Middleware
-const allowedOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
+const allowedOrigin = process.env.CORS_ORIGIN || "https://classy-maamoul-7230bb.netlify.app";
 
 app.use(
   cors({
