@@ -2,211 +2,219 @@ import { initializeDatabase, query, closeDatabase } from "./database.js";
 import { isAdmin } from "./utils/auth-middleware.js";
 
 export async function handler(event, context) {
-  // Set up CORS headers
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS"
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
   };
-  
-  // Handle preflight requests
+
   if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 204,
-      headers
-    };
+    return { statusCode: 204, headers };
   }
 
   try {
     await initializeDatabase();
-    
-    // POST request - submit a contact form
+
+    // POST - anyone can submit a contact message
     if (event.httpMethod === "POST") {
       const { name, email, subject, message } = JSON.parse(event.body);
-      
+
       if (!name || !email || !message) {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: "Name, email, and message are required" })
+          body: JSON.stringify({
+            error: "Name, email, and message are required",
+          }),
         };
       }
-      
-      const date = new Date().toISOString();
-      
-      const result = await query(`
-        INSERT INTO contact_submissions (name, email, subject, message, created_at)
+
+      const now = new Date().toISOString();
+
+      const result = await query(
+        `
+        INSERT INTO contact_messages (name, email, subject, message, date)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING id
-      `, [name, email, subject, message, date]);
-      
+      `,
+        [name, email, subject, message, now]
+      );
+
       return {
         statusCode: 201,
         headers,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           message: "Contact message sent successfully",
-          id: result.rows[0].id
-        })
+          id: result.rows[0].id,
+        }),
       };
     }
-    
-    // For GET, PUT, DELETE requests, check admin authentication
+
+    // Admin routes
     const authResult = isAdmin(event);
-    
+
     if (!authResult.authenticated) {
       return {
         statusCode: 401,
         headers,
-        body: JSON.stringify({ error: authResult.error })
+        body: JSON.stringify({ error: authResult.error }),
       };
     }
-    
+
     if (!authResult.authorized) {
       return {
         statusCode: 403,
         headers,
-        body: JSON.stringify({ error: authResult.error })
+        body: JSON.stringify({ error: authResult.error }),
       };
     }
-    
-    // GET request - fetch contact messages (admin only)
+
+    // GET - fetch one or all contact messages
     if (event.httpMethod === "GET") {
-      // Check if it's a specific message
       const id = event.path.split("/").pop();
-      
+
       if (id && !isNaN(id)) {
-        const result = await query(`
-          SELECT id, name, email, subject, message, created_at as "createdAt"
-          FROM contact_submissions
+        const result = await query(
+          `
+          SELECT id, name, email, subject, message, date, is_read as "isRead"
+          FROM contact_messages
           WHERE id = $1
-        `, [id]);
-        
+        `,
+          [id]
+        );
+
         if (result.rows.length === 0) {
           return {
             statusCode: 404,
             headers,
-            body: JSON.stringify({ error: "Contact message not found" })
+            body: JSON.stringify({ error: "Contact message not found" }),
           };
         }
-        
+
         return {
           statusCode: 200,
           headers,
-          body: JSON.stringify(result.rows[0])
+          body: JSON.stringify(result.rows[0]),
         };
       }
-      
-      // Get all messages
+
       const result = await query(`
         SELECT id, name, email, subject, message, date, is_read as "isRead"
         FROM contact_messages
         ORDER BY date DESC
       `);
-      
+
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ data: result.rows })
+        body: JSON.stringify({ data: result.rows }),
       };
     }
-    
-    // PUT request - mark a message as read (admin only)
+
+    // PUT - update is_read status
     if (event.httpMethod === "PUT") {
       const id = event.path.split("/").pop();
-      
-      if (!id) {
+
+      if (!id || isNaN(id)) {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: "Contact message ID is required" })
+          body: JSON.stringify({ error: "Valid message ID is required" }),
         };
       }
-      
+
       const { isRead } = JSON.parse(event.body);
-      
-      if (isRead === undefined) {
+
+      if (typeof isRead !== "boolean") {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: "isRead field is required" })
+          body: JSON.stringify({ error: "isRead field must be a boolean" }),
         };
       }
-      
-      const updateResult = await query(`
+
+      const updateResult = await query(
+        `
         UPDATE contact_messages
         SET is_read = $1
         WHERE id = $2
         RETURNING id
-      `, [isRead ? true : false, id]);
-      
+      `,
+        [isRead, id]
+      );
+
       if (updateResult.rows.length === 0) {
         return {
           statusCode: 404,
           headers,
-          body: JSON.stringify({ error: "Contact message not found" })
+          body: JSON.stringify({ error: "Contact message not found" }),
         };
       }
-      
-      const messageResult = await query(`
+
+      const messageResult = await query(
+        `
         SELECT id, name, email, subject, message, date, is_read as "isRead"
         FROM contact_messages
         WHERE id = $1
-      `, [id]);
-      
+      `,
+        [id]
+      );
+
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(messageResult.rows[0])
+        body: JSON.stringify(messageResult.rows[0]),
       };
     }
-    
-    // DELETE request - delete a contact message (admin only)
+
+    // DELETE - delete contact message
     if (event.httpMethod === "DELETE") {
       const id = event.path.split("/").pop();
-      
-      if (!id) {
+
+      if (!id || isNaN(id)) {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: "Contact message ID is required" })
+          body: JSON.stringify({ error: "Valid message ID is required" }),
         };
       }
-      
-      const result = await query(`
+
+      const deleteResult = await query(
+        `
         DELETE FROM contact_messages
         WHERE id = $1
         RETURNING id
-      `, [id]);
-      
-      if (result.rows.length === 0) {
+      `,
+        [id]
+      );
+
+      if (deleteResult.rows.length === 0) {
         return {
           statusCode: 404,
           headers,
-          body: JSON.stringify({ error: "Contact message not found" })
+          body: JSON.stringify({ error: "Contact message not found" }),
         };
       }
-      
+
       return {
         statusCode: 204,
-        headers
+        headers,
       };
     }
-    
+
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: "Method not allowed" })
+      body: JSON.stringify({ error: "Method not allowed" }),
     };
   } catch (error) {
-    console.error("Error with contact messages:", error);
-    
+    console.error("Error handling contact messages:", error);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: "Internal server error" })
+      body: JSON.stringify({ error: "Internal server error" }),
     };
   } finally {
-    // Close database connection
     closeDatabase();
   }
 }

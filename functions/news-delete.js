@@ -6,84 +6,89 @@ export async function handler(event, context) {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "DELETE,OPTIONS"
+    "Access-Control-Allow-Methods": "DELETE,OPTIONS",
   };
-  
+
   // Handle preflight requests
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 204,
-      headers
+      headers,
     };
   }
-  
+
   if (event.httpMethod !== "DELETE") {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: "Method not allowed" })
+      body: JSON.stringify({ error: "Method not allowed" }),
     };
   }
 
   try {
     // Check admin authentication
     const authResult = isAdmin(event);
-    
+
     if (!authResult.authenticated) {
       return {
         statusCode: 401,
         headers,
-        body: JSON.stringify({ error: authResult.error })
+        body: JSON.stringify({ error: authResult.error }),
       };
     }
-    
+
     if (!authResult.authorized) {
       return {
         statusCode: 403,
         headers,
-        body: JSON.stringify({ error: authResult.error })
+        body: JSON.stringify({ error: authResult.error }),
       };
     }
-    
+
     const id = event.path.split("/").pop();
-    
+
     if (!id) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: "News article ID is required" })
+        body: JSON.stringify({ error: "News article ID is required" }),
       };
     }
-    
+
     const db = await initializeDatabase();
-    
-    const result = await db.runAsync(`
-      DELETE FROM news_articles
+
+    // Perform the delete operation on the correct table 'news'
+    const result = await db.runAsync(
+      `
+      DELETE FROM news
       WHERE id = ?
-    `, [id]);
-    
+    `,
+      [id]
+    );
+
+    // Check if any rows were deleted
     if (result.changes === 0) {
       return {
         statusCode: 404,
         headers,
-        body: JSON.stringify({ error: "News article not found" })
+        body: JSON.stringify({ error: "News article not found" }),
       };
     }
-    
+
     return {
       statusCode: 204,
-      headers
+      headers,
     };
   } catch (error) {
     console.error("Error deleting news article:", error);
-    
+
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: "Failed to delete news article" })
+      body: JSON.stringify({ error: "Failed to delete news article" }),
     };
   } finally {
-    // Close database connection
+    // Ensure the database connection is closed, even in case of errors
     closeDatabase();
   }
 }

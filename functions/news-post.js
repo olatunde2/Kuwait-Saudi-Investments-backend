@@ -6,80 +6,98 @@ export async function handler(event, context) {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "POST,OPTIONS"
+    "Access-Control-Allow-Methods": "POST,OPTIONS",
   };
-  
+
   // Handle preflight requests
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 204,
-      headers
+      headers,
     };
   }
-  
+
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: "Method not allowed" })
+      body: JSON.stringify({ error: "Method not allowed" }),
     };
   }
 
   try {
     // Check admin authentication
     const authResult = isAdmin(event);
-    
+
     if (!authResult.authenticated) {
       return {
         statusCode: 401,
         headers,
-        body: JSON.stringify({ error: authResult.error })
+        body: JSON.stringify({ error: authResult.error }),
       };
     }
-    
+
     if (!authResult.authorized) {
       return {
         statusCode: 403,
         headers,
-        body: JSON.stringify({ error: authResult.error })
+        body: JSON.stringify({ error: authResult.error }),
       };
     }
-    
-    const { title, summary, content, category, date, imageUrl } = JSON.parse(event.body);
-    
-    if (!title || !summary || !content || !category || !date) {
+
+    const {
+      title,
+      content,
+      imageUrl,
+      publishedDate,
+      author,
+      source,
+      isFeatured,
+    } = JSON.parse(event.body);
+
+    if (!title || !content || !publishedDate || !author || !source) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: "Title, summary, content, category, and date are required" })
+        body: JSON.stringify({
+          error:
+            "Title, content, published date, author, and source are required",
+        }),
       };
     }
-    
+
     const db = await initializeDatabase();
-    
-    const result = await db.runAsync(`
-      INSERT INTO news_articles (title, summary, content, category, date, image_url)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [title, summary, content, category, date, imageUrl]);
-    
-    const newsItem = await db.getAsync(`
-      SELECT id, title, summary, content, category, date, image_url as imageUrl, created_at as createdAt
-      FROM news_articles
+
+    const result = await db.runAsync(
+      `
+      INSERT INTO news (title, content, image_url, published_date, author, source, is_featured)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+      [title, content, imageUrl, publishedDate, author, source, isFeatured]
+    );
+
+    const newsItem = await db.getAsync(
+      `
+      SELECT id, title, content, image_url as imageUrl, published_date as publishedDate,
+             author, source, is_featured as isFeatured, created_at as createdAt, updated_at as updatedAt
+      FROM news
       WHERE id = ?
-    `, [result.lastID]);
-    
+    `,
+      [result.lastID]
+    );
+
     return {
       statusCode: 201,
       headers,
-      body: JSON.stringify(newsItem)
+      body: JSON.stringify(newsItem),
     };
   } catch (error) {
     console.error("Error creating news article:", error);
-    
+
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: "Failed to create news article" })
+      body: JSON.stringify({ error: "Failed to create news article" }),
     };
   } finally {
     // Close database connection

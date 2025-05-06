@@ -2,97 +2,96 @@ import { isAuthenticated, isAdmin } from "./utils/auth-middleware.js";
 import { initializeDatabase, query, closeDatabase } from "./database.js";
 
 export async function handler(event, context) {
-  // Set up CORS headers
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "GET,OPTIONS"
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
   };
-  
-  // Handle preflight requests
+
   if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 204,
-      headers
-    };
+    return { statusCode: 204, headers };
   }
-  
+
   if (event.httpMethod !== "GET") {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: "Method not allowed" })
+      body: JSON.stringify({ error: "Method not allowed" }),
     };
   }
 
-  // Check authentication and admin status
+  // Authenticate and authorize
   const authResult = isAuthenticated(event);
   if (!authResult.authenticated) {
     return {
       statusCode: 401,
       headers,
-      body: JSON.stringify({ error: "Authentication required" })
+      body: JSON.stringify({
+        error: authResult.error || "Authentication required",
+      }),
     };
   }
 
   const adminResult = isAdmin(event);
-  if (!adminResult.isAdmin) {
+  if (!adminResult.authorized) {
     return {
       statusCode: 403,
       headers,
-      body: JSON.stringify({ error: "Admin access required" })
+      body: JSON.stringify({
+        error: adminResult.error || "Admin access required",
+      }),
     };
   }
 
   try {
     await initializeDatabase();
-    
-    // Check if we're fetching a specific contact submission
+
     const id = event.path.split("/").pop();
     if (id && !isNaN(id)) {
-      const result = await query(`
-        SELECT id, name, email, subject, message, created_at as "createdAt"
-        FROM contact_submissions
+      const result = await query(
+        `
+        SELECT id, name, email, subject, message, date, is_read AS "isRead"
+        FROM contact_messages
         WHERE id = $1
-      `, [id]);
-      
+      `,
+        [id]
+      );
+
       if (result.rows.length === 0) {
         return {
           statusCode: 404,
           headers,
-          body: JSON.stringify({ error: "Contact submission not found" })
+          body: JSON.stringify({ error: "Contact message not found" }),
         };
       }
-      
+
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(result.rows[0])
+        body: JSON.stringify(result.rows[0]),
       };
     }
-    
-    // Otherwise, fetch all contact submissions
+
+    // Get all contact messages
     const result = await query(`
-      SELECT id, name, email, subject, message, created_at as "createdAt"
-      FROM contact_submissions
-      ORDER BY created_at DESC
+      SELECT id, name, email, subject, message, date, is_read AS "isRead"
+      FROM contact_messages
+      ORDER BY date DESC
     `);
-    
+
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ data: result.rows })
+      body: JSON.stringify({ data: result.rows }),
     };
   } catch (error) {
-    console.error("Error fetching contact submissions:", error);
-    
+    console.error("Error fetching contact messages:", error);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: "Failed to fetch contact submissions" })
+      body: JSON.stringify({ error: "Failed to fetch contact messages" }),
     };
   } finally {
-    // Close database connection
     closeDatabase();
   }
 }
