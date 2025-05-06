@@ -1,0 +1,505 @@
+{
+  "info": {
+    "name": "Investment Portal API",
+    "description": "API endpoints for the Investment Portal application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "General",
+      "item": [
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api",
+            "description": "Get API information and list of available endpoints"
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/health",
+            "description": "Check if the API is healthy"
+          }
+        },
+        {
+          "name": "About",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/about",
+            "description": "Get company information"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/login",
+            "description": "Authenticate a user and get a token",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"demo\",\n  \"password\": \"password\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/register",
+            "description": "Register a new user",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"password\": \"password123\",\n  \"displayName\": \"New User\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/user",
+            "description": "Get the current authenticated user's information",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer mock-jwt-token"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Content",
+      "item": [
+        {
+          "name": "Get Team Members",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/team",
+            "description": "Get all team members"
+          }
+        },
+        {
+          "name": "Get News Articles",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/news",
+            "description": "Get all news articles"
+          }
+        },
+        {
+          "name": "Get Investments",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/investments",
+            "description": "Get all investments"
+          }
+        },
+        {
+          "name": "Get Investment Groups",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/investment-groups",
+            "description": "Get all investment groups"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Interaction",
+      "item": [
+        {
+          "name": "Get Comments",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/comments?pageId=investments-123",
+            "description": "Get comments for a specific page"
+          }
+        },
+        {
+          "name": "Post Comment (Authenticated)",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/comments",
+            "description": "Post a new comment as an authenticated user",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer mock-jwt-token"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"This looks like a great opportunity!\",\n  \"pageId\": \"investments-123\",\n  \"parentId\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Post Comment (Guest)",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/comments",
+            "description": "Post a new comment as a guest",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"This looks like a great opportunity!\",\n  \"pageId\": \"investments-123\",\n  \"parentId\": null,\n  \"guestName\": \"John Smith\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Contact Messages (Admin)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:5000/api/contact",
+            "description": "Get all contact messages (admin only)",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer mock-jwt-token"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Submit Contact Form",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:5000/api/contact",
+            "description": "Submit a contact form message",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Smith\",\n  \"email\": \"john.smith@example.com\",\n  \"subject\": \"Investment Inquiry\",\n  \"message\": \"I'd like to learn more about your investment opportunities.\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Serverless Functions (Extended API)",
+      "description": "These endpoints are available when deployed to Netlify",
+      "item": [
+        {
+          "name": "Team Management",
+          "item": [
+            {
+              "name": "Get Team Member",
+              "request": {
+                "method": "GET",
+                "url": "http://localhost:5000/.netlify/functions/team-get/1",
+                "description": "Get a specific team member by ID"
+              }
+            },
+            {
+              "name": "Create Team Member",
+              "request": {
+                "method": "POST",
+                "url": "http://localhost:5000/.netlify/functions/team-post",
+                "description": "Create a new team member (admin only)",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mock-jwt-token"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Alex Johnson\",\n  \"role\": \"Marketing Director\",\n  \"bio\": \"Experienced marketing professional\",\n  \"imageUrl\": \"https://via.placeholder.com/150\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Update Team Member",
+              "request": {
+                "method": "PUT",
+                "url": "http://localhost:5000/.netlify/functions/team-put/1",
+                "description": "Update an existing team member (admin only)",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mock-jwt-token"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"John Doe\",\n  \"role\": \"CEO & Founder\",\n  \"bio\": \"Founder and CEO with 15 years of experience\",\n  \"imageUrl\": \"https://via.placeholder.com/150\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Delete Team Member",
+              "request": {
+                "method": "DELETE",
+                "url": "http://localhost:5000/.netlify/functions/team-delete/1",
+                "description": "Delete a team member (admin only)",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mock-jwt-token"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "News Management",
+          "item": [
+            {
+              "name": "Get News Article",
+              "request": {
+                "method": "GET",
+                "url": "http://localhost:5000/.netlify/functions/news-get/1",
+                "description": "Get a specific news article by ID"
+              }
+            },
+            {
+              "name": "Create News Article",
+              "request": {
+                "method": "POST",
+                "url": "http://localhost:5000/.netlify/functions/news-post",
+                "description": "Create a new news article (admin only)",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mock-jwt-token"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"New Investment Opportunity\",\n  \"content\": \"We are excited to announce a new investment opportunity in renewable energy.\",\n  \"date\": \"2023-05-15\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Update News Article",
+              "request": {
+                "method": "PUT",
+                "url": "http://localhost:5000/.netlify/functions/news-put/1",
+                "description": "Update an existing news article (admin only)",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mock-jwt-token"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Updated Investment Opportunity\",\n  \"content\": \"Updated description of our latest investment opportunity.\",\n  \"date\": \"2023-05-15\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Delete News Article",
+              "request": {
+                "method": "DELETE",
+                "url": "http://localhost:5000/.netlify/functions/news-delete/1",
+                "description": "Delete a news article (admin only)",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mock-jwt-token"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Investment Management",
+          "item": [
+            {
+              "name": "Get Investment",
+              "request": {
+                "method": "GET",
+                "url": "http://localhost:5000/.netlify/functions/investments-get/1",
+                "description": "Get a specific investment by ID"
+              }
+            },
+            {
+              "name": "Create Investment",
+              "request": {
+                "method": "POST",
+                "url": "http://localhost:5000/.netlify/functions/investments-post",
+                "description": "Create a new investment (admin only)",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mock-jwt-token"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Healthcare Tech Fund\",\n  \"description\": \"Investment in emerging healthcare technologies.\",\n  \"roi\": \"11%\",\n  \"groupId\": \"tech\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Update Investment",
+              "request": {
+                "method": "PUT",
+                "url": "http://localhost:5000/.netlify/functions/investments-put/1",
+                "description": "Update an existing investment (admin only)",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mock-jwt-token"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Tech Startup Fund (Updated)\",\n  \"description\": \"Updated description for our tech startup investments.\",\n  \"roi\": \"16%\",\n  \"groupId\": \"tech\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Delete Investment",
+              "request": {
+                "method": "DELETE",
+                "url": "http://localhost:5000/.netlify/functions/investments-delete/1",
+                "description": "Delete an investment (admin only)",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mock-jwt-token"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Investment Group Management",
+          "item": [
+            {
+              "name": "Get Investment Group",
+              "request": {
+                "method": "GET",
+                "url": "http://localhost:5000/.netlify/functions/investment-groups-get/tech",
+                "description": "Get a specific investment group by slug"
+              }
+            },
+            {
+              "name": "Create Investment Group",
+              "request": {
+                "method": "POST",
+                "url": "http://localhost:5000/.netlify/functions/investment-groups-post",
+                "description": "Create a new investment group (admin only)",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mock-jwt-token"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Healthcare\",\n  \"slug\": \"healthcare\",\n  \"description\": \"Investments in the healthcare sector\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Update Investment Group",
+              "request": {
+                "method": "PUT",
+                "url": "http://localhost:5000/.netlify/functions/investment-groups-put/1",
+                "description": "Update an existing investment group (admin only)",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mock-jwt-token"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Technology (Updated)\",\n  \"slug\": \"tech\",\n  \"description\": \"Updated description for technology investments\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Delete Investment Group",
+              "request": {
+                "method": "DELETE",
+                "url": "http://localhost:5000/.netlify/functions/investment-groups-delete/1",
+                "description": "Delete an investment group (admin only)",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer mock-jwt-token"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

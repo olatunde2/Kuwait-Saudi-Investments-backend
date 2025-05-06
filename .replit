@@ -1,0 +1,83 @@
+modules = ["nodejs-20", "postgresql-16"]
+
+[nix]
+channel = "stable-24_05"
+packages = ["jq"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Serverless Functions Server"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "netlify_serverless"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "PostgreSQL API Server"
+
+[[workflows.workflow]]
+name = "Serverless Functions Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx netlify-cli dev --port=8888"
+waitForPort = 8888
+
+[[workflows.workflow]]
+name = "netlify_serverless"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd functions && ls -la"
+
+[[workflows.workflow]]
+name = "PostgreSQL API Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node server-pg.js"
+waitForPort = 5000
+
+[deployment]
+run = ["sh", "-c", "npx netlify-cli dev --port=8888"]
+
+[[ports]]
+localPort = 3000
+externalPort = 80
+
+[[ports]]
+localPort = 3999
+externalPort = 3001
+exposeLocalhost = true
+
+[[ports]]
+localPort = 5000
+externalPort = 5000
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
+[[ports]]
+localPort = 8888
+externalPort = 3002
+
+[[ports]]
+localPort = 41667
+externalPort = 3000
+
+[[ports]]
+localPort = 43077
+externalPort = 3003

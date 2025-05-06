@@ -1,0 +1,18 @@
+[build]
+  functions = "functions"
+  publish = "public"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["sqlite3", "bcrypt", "pg"]
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[dev]
+  functions = "functions"
+  publish = "public"
+  port = 8888
+  targetPort = 5000
