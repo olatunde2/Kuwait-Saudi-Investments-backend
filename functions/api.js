@@ -1,8 +1,10 @@
-const cors = require("./utils/cors");
-
 export async function handler(event, context) {
   // Set up CORS headers with specific origin and allow credential
-  const headers = cors();
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
+  };
 
   // Handle preflight requests (OPTIONS)
   if (event.httpMethod === "OPTIONS") {
