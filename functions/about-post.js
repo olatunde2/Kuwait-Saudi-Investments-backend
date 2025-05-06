@@ -1,27 +1,24 @@
 import { isAuthenticated, isAdmin } from "./utils/auth-middleware.js";
 import { initializeDatabase, query, closeDatabase } from "./database.js";
+import cors from "./utils/cors.js";
 
 export async function handler(event, context) {
   // Set up CORS headers
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "POST,OPTIONS"
-  };
-  
+  const headers = cors();
+
   // Handle preflight requests
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 204,
-      headers
+      headers,
     };
   }
-  
+
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: "Method not allowed" })
+      body: JSON.stringify({ error: "Method not allowed" }),
     };
   }
 
@@ -31,7 +28,7 @@ export async function handler(event, context) {
     return {
       statusCode: 401,
       headers,
-      body: JSON.stringify({ error: "Authentication required" })
+      body: JSON.stringify({ error: "Authentication required" }),
     };
   }
 
@@ -40,52 +37,57 @@ export async function handler(event, context) {
     return {
       statusCode: 403,
       headers,
-      body: JSON.stringify({ error: "Admin access required" })
+      body: JSON.stringify({ error: "Admin access required" }),
     };
   }
 
   try {
     const body = JSON.parse(event.body);
     const { title, content, orderIndex, imageUrl } = body;
-    
+
     if (!title || !content) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: "Title and content are required" })
+        body: JSON.stringify({ error: "Title and content are required" }),
       };
     }
-    
+
     await initializeDatabase();
-    
+
     // Get the maximum order index if not provided
     let index = orderIndex;
     if (index === undefined) {
-      const maxResult = await query('SELECT MAX(order_index) as max FROM about_sections');
+      const maxResult = await query(
+        "SELECT MAX(order_index) as max FROM about_sections"
+      );
       index = maxResult.rows[0].max ? maxResult.rows[0].max + 1 : 0;
     }
-    
+
     const now = new Date().toISOString();
-    
-    const result = await query(`
+
+    const result = await query(
+      `
       INSERT INTO about_sections (title, content, order_index, image_url, created_at)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING id, title, content, order_index as "orderIndex", image_url as "imageUrl", 
                 created_at as "createdAt"
-    `, [title, content, index, imageUrl || null, now]);
-    
+    `,
+      [title, content, index, imageUrl || null, now]
+    );
+
     return {
       statusCode: 201,
       headers,
-      body: JSON.stringify(result.rows[0])
+      body: JSON.stringify(result.rows[0]),
     };
   } catch (error) {
     console.error("Error creating about section:", error);
-    
+
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: "Failed to create about section" })
+      body: JSON.stringify({ error: "Failed to create about section" }),
     };
   } finally {
     // Close database connection

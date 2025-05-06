@@ -3,7 +3,7 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["sqlite3", "bcrypt", "pg"]
+  external_node_modules = ["sqlite3", "bcrypt", "pg", "jsonwebtoken"]
 
 [[redirects]]
   from = "/api/*"
@@ -13,5 +13,5 @@
 [dev]
   functions = "functions"
   publish = "public"
-  port = 8888
+  port = 8000
   targetPort = 5000

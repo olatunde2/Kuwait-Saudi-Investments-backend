@@ -1,10 +1,8 @@
+import cors from "./utils/cors";
+
 export async function handler(event, context) {
   // Set up CORS headers with specific origin and allow credential
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "GET,OPTIONS",
-  };
+  const headers = cors();
 
   // Handle preflight requests (OPTIONS)
   if (event.httpMethod === "OPTIONS") {

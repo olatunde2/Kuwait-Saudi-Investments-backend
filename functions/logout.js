@@ -1,24 +1,22 @@
+import cors from "./utils/cors";
+
 export async function handler(event, context) {
   // Set up CORS headers
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "POST,OPTIONS"
-  };
-  
+  const headers = cors();
+
   // Handle preflight requests
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 204,
-      headers
+      headers,
     };
   }
-  
+
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: "Method not allowed" })
+      body: JSON.stringify({ error: "Method not allowed" }),
     };
   }
 
@@ -27,6 +25,6 @@ export async function handler(event, context) {
   return {
     statusCode: 200,
     headers,
-    body: JSON.stringify({ message: "Logged out successfully" })
+    body: JSON.stringify({ message: "Logged out successfully" }),
   };
 }

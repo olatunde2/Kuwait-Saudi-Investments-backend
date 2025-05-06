@@ -1,8 +1,12 @@
-require("dotenv").config();
+// functions/utils/cors.js
+
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 
 module.exports = function cors() {
   const allowedOrigin = process.env.CORS_ORIGIN || "*";
-  console.log(allowedOrigin);
+  console.log("Allowed origin:", allowedOrigin);
 
   return {
     "Access-Control-Allow-Origin": allowedOrigin,

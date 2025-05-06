@@ -1,2 +1,5 @@
 .congif
 
+
+# Local Netlify folder
+.netlify

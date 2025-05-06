@@ -1,104 +1,107 @@
 import { isAdmin } from "./utils/auth-middleware.js";
 import { initializeDatabase, closeDatabase } from "./database.js";
+import cors from "./utils/cors.js";
 
 export async function handler(event, context) {
   // Set up CORS headers
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "PUT,OPTIONS"
-  };
-  
+  const headers = cors();
+
   // Handle preflight requests
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 204,
-      headers
+      headers,
     };
   }
-  
+
   if (event.httpMethod !== "PUT") {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: "Method not allowed" })
+      body: JSON.stringify({ error: "Method not allowed" }),
     };
   }
 
   try {
     // Check admin authentication
     const authResult = isAdmin(event);
-    
+
     if (!authResult.authenticated) {
       return {
         statusCode: 401,
         headers,
-        body: JSON.stringify({ error: authResult.error })
+        body: JSON.stringify({ error: authResult.error }),
       };
     }
-    
+
     if (!authResult.authorized) {
       return {
         statusCode: 403,
         headers,
-        body: JSON.stringify({ error: authResult.error })
+        body: JSON.stringify({ error: authResult.error }),
       };
     }
-    
+
     const id = event.path.split("/").pop();
-    
+
     if (!id) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: "Team member ID is required" })
+        body: JSON.stringify({ error: "Team member ID is required" }),
       };
     }
-    
+
     const { name, position, bio, imageUrl } = JSON.parse(event.body);
-    
+
     if (!name || !position || !bio) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: "Name, position, and bio are required" })
+        body: JSON.stringify({ error: "Name, position, and bio are required" }),
       };
     }
-    
+
     const db = await initializeDatabase();
-    
-    const result = await db.runAsync(`
+
+    const result = await db.runAsync(
+      `
       UPDATE team_members
       SET name = ?, position = ?, bio = ?, image_url = ?
       WHERE id = ?
-    `, [name, position, bio, imageUrl, id]);
-    
+    `,
+      [name, position, bio, imageUrl, id]
+    );
+
     if (result.changes === 0) {
       return {
         statusCode: 404,
         headers,
-        body: JSON.stringify({ error: "Team member not found" })
+        body: JSON.stringify({ error: "Team member not found" }),
       };
     }
-    
-    const teamMember = await db.getAsync(`
+
+    const teamMember = await db.getAsync(
+      `
       SELECT id, name, position, bio, image_url as imageUrl, created_at as createdAt
       FROM team_members
       WHERE id = ?
-    `, [id]);
-    
+    `,
+      [id]
+    );
+
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(teamMember)
+      body: JSON.stringify(teamMember),
     };
   } catch (error) {
     console.error("Error updating team member:", error);
-    
+
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: "Failed to update team member" })
+      body: JSON.stringify({ error: "Failed to update team member" }),
     };
   } finally {
     // Close database connection
