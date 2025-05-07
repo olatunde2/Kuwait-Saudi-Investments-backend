@@ -3,10 +3,8 @@ import { closeDatabase } from "./database.js";
 import cors from "./utils/cors.js";
 
 export async function handler(event, context) {
-  // Set up CORS headers
   const headers = cors();
 
-  // Handle preflight requests
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 204,
@@ -22,9 +20,21 @@ export async function handler(event, context) {
     };
   }
 
-  try {
-    const { username, password } = JSON.parse(event.body);
+  let username, password;
 
+  try {
+    const body = JSON.parse(event.body);
+    username = body.username;
+    password = body.password;
+  } catch (err) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({ error: "Invalid JSON payload" }),
+    };
+  }
+
+  try {
     if (!username || !password) {
       return {
         statusCode: 400,
@@ -43,24 +53,30 @@ export async function handler(event, context) {
       };
     }
 
-    // Generate JWT token
     const token = generateToken(user);
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ user, token }),
+      body: JSON.stringify({
+        user: {
+          id: user.id,
+          username: user.username,
+          displayName: user.displayName,
+          isAdmin: user.isAdmin,
+          createdAt: user.createdAt,
+        },
+        token,
+      }),
     };
   } catch (error) {
     console.error("Login error:", error);
-
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ error: "Internal server error" }),
     };
   } finally {
-    // Close database connection
-    closeDatabase();
+    await closeDatabase();
   }
 }
