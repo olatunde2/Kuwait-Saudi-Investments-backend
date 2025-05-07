@@ -25,11 +25,22 @@ export async function handler(event, context) {
   try {
     const { username, password, displayName } = JSON.parse(event.body);
 
+    // Input validation
     if (!username || !password) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ error: "Username and password are required" }),
+      };
+    }
+
+    if (password.length < 6) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: "Password must be at least 6 characters long",
+        }),
       };
     }
 
@@ -60,7 +71,6 @@ export async function handler(event, context) {
       body: JSON.stringify({ error: "Internal server error" }),
     };
   } finally {
-    // Close database connection
     closeDatabase();
   }
 }

@@ -1,5 +1,3 @@
-// functions/utils/cors.js
-
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
@@ -12,7 +10,8 @@ module.exports = function cors() {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Headers": "Content-Type,Authorization",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Content-Type": "application/json",
     "Access-Control-Allow-Credentials": "true",
+    "Content-Type": "application/json",
   };
 };
+
