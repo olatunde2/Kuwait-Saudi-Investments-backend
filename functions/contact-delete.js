@@ -1,12 +1,9 @@
 import { isAuthenticated, isAdmin } from "./utils/auth-middleware.js";
 import { initializeDatabase, query, closeDatabase } from "./database.js";
+import cors from "./utils/cors.js";
 
 export async function handler(event, context) {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type,Authorization",
-    "Access-Control-Allow-Methods": "DELETE,OPTIONS",
-  };
+  const headers = cors();
 
   // Handle preflight
   if (event.httpMethod === "OPTIONS") {

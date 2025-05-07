@@ -1,47 +1,37 @@
 import { verifyToken } from "../auth.js";
 
-/**
- * Authentication middleware for Netlify Functions
- */
-export function isAuthenticated(event) {
+export async function isAuthenticated(event) {
+  const authHeader =
+    event.headers?.Authorization || event.headers?.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return { authenticated: false, error: "Missing or invalid token" };
+  }
+
+  const token = authHeader.split(" ")[1];
+
   try {
-    // Get the authorization header
-    const authHeader = event.headers.authorization || event.headers.Authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return { authenticated: false, error: 'Not authenticated' };
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return { authenticated: false, error: "Invalid token" };
     }
-    
-    // Extract the token
-    const token = authHeader.split(' ')[1];
-    
-    // Verify the token
-    const user = verifyToken(token);
-    
-    if (!user) {
-      return { authenticated: false, error: 'Invalid token' };
-    }
-    
-    return { authenticated: true, user };
-  } catch (error) {
-    console.error('Authentication error:', error);
-    return { authenticated: false, error: 'Authentication error' };
+    return { authenticated: true, user: decoded };
+  } catch (err) {
+    console.error("Error verifying token:", err);
+    return { authenticated: false, error: "Invalid token" };
   }
 }
 
-/**
- * Admin authentication middleware for Netlify Functions
- */
 export function isAdmin(event) {
   const authResult = isAuthenticated(event);
-  
+
   if (!authResult.authenticated) {
     return authResult;
   }
-  
+
   if (!authResult.user.isAdmin) {
-    return { authenticated: true, authorized: false, error: 'Not authorized' };
+    return { authenticated: true, authorized: false, error: "Not authorized" };
   }
-  
+
   return { authenticated: true, authorized: true, user: authResult.user };
 }

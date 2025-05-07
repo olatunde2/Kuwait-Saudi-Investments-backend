@@ -1,4 +1,4 @@
-import { isAuthenticated } from "./utils/auth-middleware.js";
+import { authenticateJWT } from "./auth.js";
 import { closeDatabase } from "./database.js";
 import cors from "./utils/cors.js";
 
@@ -6,7 +6,7 @@ export async function handler(event, context) {
   // Set up CORS headers
   const headers = cors();
 
-  // Handle preflight requests
+  // Handle preflight requests (OPTIONS)
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 204,
@@ -23,8 +23,8 @@ export async function handler(event, context) {
   }
 
   try {
-    // Check authentication
-    const authResult = isAuthenticated(event);
+    // Check if the user is authenticated (with the Authorization header from event)
+    const authResult = await authenticateJWT(event);
 
     if (!authResult.authenticated) {
       return {

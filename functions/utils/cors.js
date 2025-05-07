@@ -4,8 +4,7 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 module.exports = function cors() {
-  const allowedOrigin =
-    process.env.CORS_ORIGIN || "https://classy-maamoul-7230bb.netlify.app";
+  const allowedOrigin = process.env.CORS_ORIGIN || "*";
   console.log("Allowed origin:", allowedOrigin);
 
   return {
