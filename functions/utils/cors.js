@@ -1,11 +1,9 @@
-// functions/utils/cors.js
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
 
 module.exports = function cors() {
-  const allowedOrigin =
-    process.env.CORS_ORIGIN || "https://classy-maamoul-7230bb.netlify.app";
+  const allowedOrigin = process.env.CORS_ORIGIN || "*";
   console.log("Allowed origin:", allowedOrigin);
 
   return {
@@ -16,3 +14,4 @@ module.exports = function cors() {
     "Content-Type": "application/json",
   };
 };
+
