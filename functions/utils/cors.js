@@ -1,4 +1,3 @@
-// functions/utils/cors.js
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
@@ -15,3 +14,4 @@ module.exports = function cors() {
     "Content-Type": "application/json",
   };
 };
+
